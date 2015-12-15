@@ -1,10 +1,12 @@
 # FoxBox Bridge API
 
-This document provides protocol-level details of the FoxBox Bridge API.
+This document provides protocol-level details of the FoxBox Bridge API that allows a client to remotely access to a FoxBox device.
 
 ___
 
-# Overview
+# HTTP API
+
+FoxBox Bridge exposes an HTTP API to register boxes and allow clients to remotely discover these boxes to initiate a WebRTC connection.
 
 ## URL Structure
 
@@ -39,7 +41,6 @@ The `GET /fxa-oauth/params` endpoint can be used to get the configuration in ord
 $ http GET http://localhost:8000/v0/fxa-oauth/params -v
 
 GET /v0/fxa-oauth/params HTTP/1.1
-Accept: */*
 Accept-Encoding: gzip, deflate
 Host: localhost:8000
 User-Agent: HTTPie/0.8.0
@@ -98,9 +99,8 @@ The currently-defined error responses are:
     * [DELETE /box/:id/user/:email/](#delete-boxiduseremail)
 * Connections
     * [POST /box/:id/connection/](#post-boxidconnection)
-    * [GET /box/:id/connection/](#get-boxidconnection)
-    * [PUT /box/:id/connection/:connection_id](#post-boxidconnectionconnection_id)
-    * [DELETE /box/:id/connection/:connection_id/](#delete-boxidconnectionconnection_id)
+* Firefox Accounts
+    * [GET /fxa-oauth/params]() 
 
 ## POST /box/
 
@@ -203,7 +203,7 @@ Unregisters a box.
 
 ___Parameters___
 
-* id: Box unique identifier. This value should be the base64 representation of the {owner,label} tuple.
+* id: Box unique identifier. This value should be the base64 representation of the `{owner,label}` tuple.
 
 ```ssh
 DELETE /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K HTTP/1.1
@@ -365,7 +365,9 @@ Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
 
 ### Response
 
-Successful requests will produce a "200 OK" response with a body containing a `connectionUrl` parameter with a websockets URL to initiate the [websockets based connection protocol](). The last part of the websocket URL is the version number sent to the box via SimplePush notification.
+Successful requests will produce a "200 OK" response with a body containing:
+
+* `connectionUrl` parameter with a websockets URL to initiate the [websockets based connection protocol](). The last part of the websocket URL is the version number sent to the box via SimplePush notification.
 
 ```ssh
 HTTP/1.1 200 OK
@@ -378,10 +380,64 @@ Date: Mon, 15 Dec 2015 16:17:50 GMT
   "connectionUrl": "wss://localhost:5000/websocket/MX40NDcwMDk1Mn5"
 }
 ```
+
 Failing requests may be due to the following errors:
 
 * status code 400, errno 104:  Unknown box. The box identifier does not mach with any of the registered boxes.
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 
 # Websocket connection protocol
-XXX
+
+Once the peer discovery process is completed, certain information needs to be exchanged between a client and its box before being able to start the intended WebRTC communication. This data is exchanged through the following WebSockets based protocol.
+
+### Initiating WebRTC connection
+
+After receiving a connection request via push notification with a version id, the box will initiate the WebRTC connection with the client by sending a `hello` message containing a serialized WebRTC SDP offer
+
+```js
+{
+    "message": "hello",
+    "token": "44ee04b9694ae121c03a1db685cfad6d",
+    "webrtcOffer": "<sdp-offer>"
+}
+```
+
+### Receiving WebRTC answer
+
+The client should response with a serialized WebRTC SDP answer.
+
+```js
+{
+    "message": "hello",
+    "webrtcAnswer": "<sdp-answer>"
+}
+```
+
+### Sending and receiving ICE candidates
+
+Along with the SDP offer/answer, network information needs to be exchanged.
+
+```js
+{
+    "message": "ice",
+    "candidate": {
+        "candidate": "candidate:2 1 UDP 2122187007 10.252.27.213 41683 typ host",
+        "sdpMid": "",
+        "sdpMLineIndex": 0
+    }
+}
+```
+
+### Errors
+
+Errors caused in any of the described stages will be sent with the following format:
+
+```js
+{
+  "message": "error",
+  "errno": 777, // stable application-level error number
+  "error": "Bad Request", // string description of the error type
+  "message": "the value of salt is not allowed to be undefined",
+  "info": "https://docs.endpoint/errors/1234" // link to more info on the error
+}
+```
