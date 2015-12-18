@@ -25,7 +25,7 @@ All POST requests must have a content-type of `application/json` with a utf8-enc
 
 ### Authentication
 
-The authentication is using [Firefox Accounts](https://developer.mozilla.org/en-US/docs/Mozilla/Tech/Firefox_Accounts), to verify the OAuth2 bearer tokens on a remote server
+Requests that require authentication use [Firefox Accounts](https://developer.mozilla.org/en-US/docs/Mozilla/Tech/Firefox_Accounts) OAuth2 bearer tokens. These endpoints are marked with :lock: in the description below
 
 Use the OAuth token with this header:
 
@@ -82,25 +82,30 @@ The currently-defined error responses are:
 * status code 400, errno 101:  Invalid push endpoint. You forgot to pass the Simple Push URL or it is not a valid URL.
 * status code 400, errno 102:  Invalid label. You forgot to pass the label for this box or it is not well formed (single string).
 * status code 400, errno 103:  Invalid users. The list of allowed users is not well formed.
+* status code 400, errno 104:  Unknown box. The box identifier does not mach with any of the registered boxes.
+* status code 400, errno 105:  Unknown user. The given user does not match with any of the allowed users for this box.
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
-* status code 409, errno 301:  Already registered. The tuple {owner, label} already exists.
-* status code 501, errno 101:  Database error
+* status code 409, errno 301:  Already registered. The tuple `{owner, label}` already exists.
+* status code 498, errno 401:  Token expired/invalid.
+* status code 501, errno 501:  Database error
 * any status code, errno 999:  Unknown error
 
 # API Endpoints
 
 * Boxes
-    * [POST /box/](#post-box)
-    * [GET /box/](#get-box)
-    * [DELETE /box/:id/](#delete-boxid)
+    * [POST /box/](#post-box) :lock:
+    * [GET /box/](#get-box) :lock:
+    * [DELETE /box/:id/](#delete-boxid) :lock:
 * Users
-    * [POST /box/:id/user/](#post-boxiduser)
-    * [PUT /box/:id/user/:email/](#put-boxiduseremail)
-    * [DELETE /box/:id/user/:email/](#delete-boxiduseremail)
+    * [POST /box/:id/users/](#post-boxiduser) :lock:
+    * [PUT /box/:id/users/:email/](#put-boxiduseremail) :lock:
+    * [DELETE /box/:id/users/:email/](#delete-boxiduseremail) :lock:
 * Connections
-    * [POST /box/:id/connection/](#post-boxidconnection)
+    * [POST /box/:id/connections/](#post-boxidconnection) :lock:
+    * [GET /box/connections/:token/](#get-boxconnectiontoken)
+    * [DELETE /box/connections/:token/](#delete-boxconnectiontoken)
 * Firefox Accounts
-    * [GET /fxa-oauth/params]() 
+    * [GET /fxa-oauth/params]()
 
 ## POST /box/
 
@@ -203,7 +208,7 @@ Unregisters a box.
 
 ___Parameters___
 
-* id: Box unique identifier. This value should be the base64 representation of the `{owner,label}` tuple.
+* id - Box unique identifier. This value should be the base64 representation of the `{owner,label}` tuple.
 
 ```ssh
 DELETE /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K HTTP/1.1
@@ -228,7 +233,7 @@ Failing requests may be due to the following errors:
 * status code 400, errno 104:  Unknown box. The box identifier does not mach with any of the registered boxes.
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 
-## POST /box/:id/user/
+## POST /box/:id/users/
 
 Adds a new user to the list of allowed users for a registered box. Only the owner or admins of the box are able to perform this action.
 
@@ -236,11 +241,11 @@ Adds a new user to the list of allowed users for a registered box. Only the owne
 
 ___Parameters___
 
-* id: Box unique identifier. This value should be the base64 representation of the {owner,label} tuple.
+* id - Box unique identifier. This value should be the base64 representation of the `{owner,label}` tuple.
 * users - Array of users allowed to remotely access to this box. Each user should include a valid Firefox Accounts email and optionally an `admin` flag that indicates that the user is able to modify the registration.
 
 ```ssh
-POST /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/user/ HTTP/1.1
+POST /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/users/ HTTP/1.1
 Content-Type: application/json
 Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
 
@@ -271,7 +276,7 @@ Failing requests may be due to the following errors:
 * status code 400, errno 104:  Unknown box. The box identifier does not mach with any of the registered boxes.
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 
-## PUT /box/:id/user/:email/
+## PUT /box/:id/users/:email/
 
 Edit the details of an existing user.
 
@@ -279,12 +284,12 @@ Edit the details of an existing user.
 
 ___Parameters___
 
-* id: Box unique identifier. This value should be the base64 representation of the {owner,label} tuple.
-* email: base64 representation of a valid Firefox Account email.
+* id - Box unique identifier. This value should be the base64 representation of the `{owner,label}` tuple.
+* email - base64 representation of a valid Firefox Account email.
 * admin - Boolean flag indicating that the user has admin permissions for this box.
 
 ```ssh
-PUT /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/user/dXNlckBkb21haW4ub3Jn/ HTTP/1.1
+PUT /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/users/dXNlckBkb21haW4ub3Jn/ HTTP/1.1
 Content-Type: application/json
 Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
 
@@ -312,7 +317,7 @@ Failing requests may be due to the following errors:
 * status code 400, errno 105:  Unknown user. The given user does not match with any of the allowed users for this box.
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 
-## DELETE /box/:id/user/:email/
+## DELETE /box/:id/users/:email/
 
 Removes an existing user from a box registration.
 
@@ -320,11 +325,11 @@ Removes an existing user from a box registration.
 
 ___Parameters___
 
-* id: Box unique identifier. This value should be the base64 representation of the {owner,label} tuple.
-* email: base64 representation of a valid Firefox Account email.
+* id - Box unique identifier. This value should be the base64 representation of the `{owner,label}` tuple.
+* email - base64 representation of a valid Firefox Account email.
 
 ```ssh
-DELETE /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/user/dXNlckBkb21haW4ub3Jn/ HTTP/1.1
+DELETE /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/users/dXNlckBkb21haW4ub3Jn/ HTTP/1.1
 Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
 ```
 
@@ -347,27 +352,31 @@ Failing requests may be due to the following errors:
 * status code 400, errno 105:  Unknown user. The given user does not match with any of the allowed users for this box.
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 
-## POST /box/:id/connection/
+## POST /box/:id/connections/
 
-Initiates a remote connection with a box. The given bearer token should belong to any of the allowed box users.
+Initiates a remote connection with a box. The bearer token authenticating the request should belong to any of the allowed box users.
 
 ### Request
 
 ___Parameters___
 
-* id: Box unique identifier. This value should be the base64 representation of the {owner,label} tuple.
+* id - Box unique identifier. This value should be the base64 representation of the `{owner,label}` tuple.
+* scopeURL - URL of the box service the client wants to access remotely.
 
 ```ssh
-POST /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/connection/ HTTP/1.1
+POST /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/connections/ HTTP/1.1
 Content-Type: application/json
 Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
+{
+  "scopeURL": "https://a.service.running.on.a.foxbox.com"
+}
 ```
 
 ### Response
 
 Successful requests will produce a "200 OK" response with a body containing:
 
-* `connectionUrl` parameter with a websockets URL to initiate the [websockets based connection protocol](). The last part of the websocket URL is the version number sent to the box via SimplePush notification.
+* connectionToken - The token used to identify the connection.
 
 ```ssh
 HTTP/1.1 200 OK
@@ -377,7 +386,7 @@ Content-Length: 2
 Date: Mon, 15 Dec 2015 16:17:50 GMT
 
 {
-  "connectionUrl": "wss://localhost:5000/websocket/MX40NDcwMDk1Mn5"
+  "connectionToken": "pPVoaqiH89M"
 }
 ```
 
@@ -386,7 +395,73 @@ Failing requests may be due to the following errors:
 * status code 400, errno 104:  Unknown box. The box identifier does not mach with any of the registered boxes.
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 
-# Websocket connection protocol
+## GET /box/connections/:token
+
+Starts a remote connection.
+
+### Request
+
+___Parameters___
+
+* token - Token identifying the connection.
+
+```ssh
+GET /box/connections/pPVoaqiH89M HTTP/1.1
+```
+
+### Response
+
+Successful requests will produce a "200 OK" response with a body containing:
+
+* connectionURL - WebSockets URL to initiate the WebRTC connection between the remote client and the box. See [WebSockets API]().
+
+```ssh
+HTTP/1.1 200 OK
+Connection: close
+Content-Type: application/json; charset=utf-8
+Content-Length: 2
+Date: Mon, 15 Dec 2015 16:17:50 GMT
+
+{
+  "connectionURL": "wss://localhost:5000/websocket/MX40NDcwMDk1Mn5"
+}
+```
+
+Failing requests may be due to the following errors:
+
+* status code 498, errno 401:  Token expired/invalid.
+
+## POST /box/:id/connections/
+
+Initiates a remote connection with a box. The bearer token authenticating the request should belong to any of the allowed box users.
+
+### Request
+
+___Parameters___
+
+* token - Token identifying the connection.
+
+```ssh
+DELETE /box/connections/pPVoaqiH89M HTTP/1.1
+Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
+
+```
+
+### Response
+
+Successful requests will produce a "200 OK".
+
+```ssh
+HTTP/1.1 200 OK
+Connection: close
+```
+
+Failing requests may be due to the following errors:
+
+* status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
+* status code 498, errno 401:  Token expired/invalid.
+
+# WebSockets API
 
 Once the peer discovery process is completed, certain information needs to be exchanged between a client and its box before being able to start the intended WebRTC communication. This data is exchanged through the following WebSockets based protocol.
 
