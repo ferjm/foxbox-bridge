@@ -103,7 +103,7 @@ The currently-defined error responses are:
 * Connections
     * [POST /box/:id/connections/](#post-boxidconnection) :lock:
     * [GET /box/connections/:token/](#get-boxconnectiontoken)
-    * [DELETE /box/connections/:token/](#delete-boxconnectiontoken)
+    * [DELETE /box/connections/:token/](#delete-boxconnectiontoken) :lock:
 * Firefox Accounts
     * [GET /fxa-oauth/params]()
 
@@ -431,7 +431,7 @@ Failing requests may be due to the following errors:
 
 * status code 498, errno 401:  Token expired/invalid.
 
-## POST /box/:id/connections/
+## DELETE /box/:id/connections/
 
 Initiates a remote connection with a box. The bearer token authenticating the request should belong to any of the allowed box users.
 
