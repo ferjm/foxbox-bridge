@@ -354,7 +354,7 @@ Failing requests may be due to the following errors:
 
 ## POST /box/:id/connections/
 
-Initiates a remote connection with a box. The bearer token authenticating the request should belong to any of the allowed box users.
+Creates a remote connection for a client to access a box externally. The bearer token authenticating the request should belong to any of the allowed box users.
 
 ### Request
 
@@ -387,6 +387,47 @@ Date: Mon, 15 Dec 2015 16:17:50 GMT
 
 {
   "connectionToken": "pPVoaqiH89M"
+}
+```
+
+Failing requests may be due to the following errors:
+
+* status code 400, errno 104:  Unknown box. The box identifier does not mach with any of the registered boxes.
+* status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
+
+## GET /box/:id/connections/
+
+Obtains the list of connections for a specific box. The bearer token authenticating the request should belong to any of the allowed box users.
+
+### Request
+
+___Parameters___
+
+* id - Box unique identifier. This value should be the base64 representation of the `{owner,label}` tuple.
+
+```ssh
+GET /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/connections/ HTTP/1.1
+Content-Type: application/json
+Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
+```
+
+### Response
+
+Successful requests will produce a "200 OK" response with a body containing:
+
+* connectionToken - The token used to identify the connection.
+* pushNotification - Version sent along with the push notification.
+
+```ssh
+HTTP/1.1 200 OK
+Connection: close
+Content-Type: application/json; charset=utf-8
+Content-Length: 2
+Date: Mon, 15 Dec 2015 16:17:50 GMT
+
+{
+  "connectionToken": "pPVoaqiH89M",
+  "pushNotification": "1450696947434"
 }
 ```
 
@@ -433,7 +474,7 @@ Failing requests may be due to the following errors:
 
 ## DELETE /box/:id/connections/
 
-Initiates a remote connection with a box. The bearer token authenticating the request should belong to any of the allowed box users.
+Removes a remote connection with a box. The bearer token authenticating the request should belong to any of the allowed box users.
 
 ### Request
 
