@@ -93,21 +93,23 @@ The currently-defined error responses are:
 # API Endpoints
 
 * Boxes
-    * [POST /box/](#post-box) :lock:
-    * [GET /box/](#get-box) :lock:
-    * [DELETE /box/:id/](#delete-boxid) :lock:
+    * [POST /boxes/](#post-boxes) :lock:
+    * [GET /boxes/](#get-boxes) :lock:
+    * [DELETE /boxes/:id/](#delete-boxesid) :lock:
 * Users
-    * [POST /box/:id/users/](#post-boxiduser) :lock:
-    * [PUT /box/:id/users/:email/](#put-boxiduseremail) :lock:
-    * [DELETE /box/:id/users/:email/](#delete-boxiduseremail) :lock:
+    * [POST /boxes/:id/users/](#post-boxesidusers) :lock:
+    * [GET /boxes/:id/users/](#get-boxesidusers) :lock:
+    * [PUT /boxes/:id/users/:email/](#put-boxesidusersemail) :lock:
+    * [DELETE /boxes/:id/users/:email/](#delete-boxesidusersemail) :lock:
 * Connections
-    * [POST /box/:id/connections/](#post-boxidconnection) :lock:
-    * [GET /box/connections/:token/](#get-boxconnectiontoken)
-    * [DELETE /box/connections/:token/](#delete-boxconnectiontoken) :lock:
+    * [POST /boxes/:id/connections/](#post-boxesidconnections) :lock:
+    * [GET /boxes/:id/connections/](#get-boxesidconnections) :lock:
+    * [GET /boxes/connections/:token/](#get-boxesconnectionstoken)
+    * [DELETE /boxes/connections/:token/](#delete-boxesconnectionstoken) :lock:
 * Firefox Accounts
     * [GET /fxa-oauth/params]()
 
-## POST /box/
+## POST /boxes/
 
 Registers a new FoxBox with the Bridge by associating a push endpoint with a unique `{owner, label}` tuple, where `owner` is a verified Firefox Accounts email and `label` is an identifier for the box.
 
@@ -121,7 +123,7 @@ ___Parameters___
 * users - (optional) Array of users allowed to remotely access to this box. Each user should include a valid Firefox Accounts email and optionally an `admin` flag that indicates that the user is able to modify the registration. Each box should handle the permissions to access the services it exposes by itself. The bridge only takes care of the connection between remote clients and boxes.
 
 ```ssh
-POST /box/ HTTP/1.1
+POST /boxes/ HTTP/1.1
 Content-Type: application/json
 Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
 
@@ -161,14 +163,14 @@ Failing requests may be due to the following errors:
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 * status code 409, errno 301:  Already registered. The tuple {owner, label} already exists.
 
-## GET /box/
+## GET /boxes/
 
 Returns the list of registered boxes owned or administrated by the Firefox Account authenticating the request.
 
 ### Request
 
 ```ssh
-GET /box/ HTTP/1.1
+GET /boxes/ HTTP/1.1
 Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
 ```
 
@@ -200,7 +202,7 @@ Failing requests may be due to the following errors:
 
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 
-## DELETE /box/:id/
+## DELETE /boxes/:id/
 
 Unregisters a box.
 
@@ -211,7 +213,7 @@ ___Parameters___
 * id - Box unique identifier. This value should be the base64 representation of the `{owner,label}` tuple.
 
 ```ssh
-DELETE /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K HTTP/1.1
+DELETE /boxes/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K HTTP/1.1
 Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
 ```
 
@@ -233,7 +235,7 @@ Failing requests may be due to the following errors:
 * status code 400, errno 104:  Unknown box. The box identifier does not mach with any of the registered boxes.
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 
-## POST /box/:id/users/
+## POST /boxes/:id/users/
 
 Adds a new user to the list of allowed users for a registered box. Only the owner or admins of the box are able to perform this action.
 
@@ -245,7 +247,7 @@ ___Parameters___
 * users - Array of users allowed to remotely access to this box. Each user should include a valid Firefox Accounts email and optionally an `admin` flag that indicates that the user is able to modify the registration.
 
 ```ssh
-POST /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/users/ HTTP/1.1
+POST /boxes/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/users/ HTTP/1.1
 Content-Type: application/json
 Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
 
@@ -276,7 +278,47 @@ Failing requests may be due to the following errors:
 * status code 400, errno 104:  Unknown box. The box identifier does not mach with any of the registered boxes.
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 
-## PUT /box/:id/users/:email/
+## GET /boxes/:id/users/
+
+Obtains the list of allowed users for a registered box. Only the owner or admins of the box are able to perform this action.
+
+### Request
+
+___Parameters___
+
+* id - Box unique identifier. This value should be the base64 representation of the `{owner,label}` tuple.
+
+```ssh
+GET /boxes/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/users/ HTTP/1.1
+Content-Type: application/json
+Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
+
+```
+
+### Response
+
+Successful requests will produce a "200 OK" response.
+
+```ssh
+HTTP/1.1 200 OK
+Connection: close
+Content-Type: application/json; charset=utf-8
+Content-Length: 98
+Date: Mon, 15 Dec 2015 16:17:50 GMT
+
+{
+  "users": [{
+    "email": "user@domain.org",
+    "admin": true
+  }, "anotheruser@domain.com"]
+}
+```
+Failing requests may be due to the following errors:
+
+* status code 400, errno 104:  Unknown box. The box identifier does not mach with any of the registered boxes.
+* status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
+
+## PUT /boxes/:id/users/:email/
 
 Edit the details of an existing user.
 
@@ -289,7 +331,7 @@ ___Parameters___
 * admin - Boolean flag indicating that the user has admin permissions for this box.
 
 ```ssh
-PUT /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/users/dXNlckBkb21haW4ub3Jn/ HTTP/1.1
+PUT /boxes/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/users/dXNlckBkb21haW4ub3Jn/ HTTP/1.1
 Content-Type: application/json
 Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
 
@@ -317,7 +359,7 @@ Failing requests may be due to the following errors:
 * status code 400, errno 105:  Unknown user. The given user does not match with any of the allowed users for this box.
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 
-## DELETE /box/:id/users/:email/
+## DELETE /boxes/:id/users/:email/
 
 Removes an existing user from a box registration.
 
@@ -329,7 +371,7 @@ ___Parameters___
 * email - base64 representation of a valid Firefox Account email.
 
 ```ssh
-DELETE /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/users/dXNlckBkb21haW4ub3Jn/ HTTP/1.1
+DELETE /boxes/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/users/dXNlckBkb21haW4ub3Jn/ HTTP/1.1
 Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
 ```
 
@@ -352,7 +394,7 @@ Failing requests may be due to the following errors:
 * status code 400, errno 105:  Unknown user. The given user does not match with any of the allowed users for this box.
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 
-## POST /box/:id/connections/
+## POST /boxes/:id/connections/
 
 Creates a remote connection for a client to access a box externally. The bearer token authenticating the request should belong to any of the allowed box users.
 
@@ -364,7 +406,7 @@ ___Parameters___
 * scopeURL - URL of the box service the client wants to access remotely.
 
 ```ssh
-POST /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/connections/ HTTP/1.1
+POST /boxes/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/connections/ HTTP/1.1
 Content-Type: application/json
 Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
 {
@@ -395,7 +437,7 @@ Failing requests may be due to the following errors:
 * status code 400, errno 104:  Unknown box. The box identifier does not mach with any of the registered boxes.
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 
-## GET /box/:id/connections/
+## GET /boxes/:id/connections/
 
 Obtains the list of connections for a specific box. The bearer token authenticating the request should belong to any of the allowed box users.
 
@@ -406,7 +448,7 @@ ___Parameters___
 * id - Box unique identifier. This value should be the base64 representation of the `{owner,label}` tuple.
 
 ```ssh
-GET /box/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/connections/ HTTP/1.1
+GET /boxes/ZmVyam1vcmVub0BnbWFpbC5jb20saG9tZQ0K/connections/ HTTP/1.1
 Content-Type: application/json
 Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
 ```
@@ -436,7 +478,7 @@ Failing requests may be due to the following errors:
 * status code 400, errno 104:  Unknown box. The box identifier does not mach with any of the registered boxes.
 * status code 401, errno 201:  Unauthorized. The credentials you passed are not valid.
 
-## GET /box/connections/:token
+## GET /boxes/connections/:token
 
 Starts a remote connection.
 
@@ -447,7 +489,7 @@ ___Parameters___
 * token - Token identifying the connection.
 
 ```ssh
-GET /box/connections/pPVoaqiH89M HTTP/1.1
+GET /boxes/connections/pPVoaqiH89M HTTP/1.1
 ```
 
 ### Response
@@ -472,7 +514,7 @@ Failing requests may be due to the following errors:
 
 * status code 498, errno 401:  Token expired/invalid.
 
-## DELETE /box/:id/connections/
+## DELETE /boxes/:id/connections/
 
 Removes a remote connection with a box. The bearer token authenticating the request should belong to any of the allowed box users.
 
@@ -483,7 +525,7 @@ ___Parameters___
 * token - Token identifying the connection.
 
 ```ssh
-DELETE /box/connections/pPVoaqiH89M HTTP/1.1
+DELETE /boxes/connections/pPVoaqiH89M HTTP/1.1
 Authorization:"Bearer eyJhbGciOiJSUzI1NiJ9...i_dQ"
 
 ```
