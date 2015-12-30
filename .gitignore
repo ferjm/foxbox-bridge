@@ -1,0 +1,12 @@
+*.log
+*.out
+*.pid
+*.gz
+*.swp
+
+pids
+logs
+results
+
+node_modules
+npm-debug.log

@@ -1,0 +1,37 @@
+{
+  "name": "foxbridge",
+  "version": "1.0.0",
+  "description": "Proof of concept of FoxBox's bridge",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ferjm/foxbox-bridge.git"
+  },
+  "author": "Fernando Jimenez Moreno <ferjmoreno@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ferjm/foxbox-bridge/issues"
+  },
+  "homepage": "https://github.com/ferjm/foxbox-bridge",
+  "devDependencies": {
+    "expect.js": "^0.3.1",
+    "gulp": "^3.9.0",
+    "gulp-jshint": "^2.0.0",
+    "jshint": "^2.8.0",
+    "mocha": "^1.18.2",
+    "morgan": "^1.6.1",
+    "superagent": "^1.6.1"
+  },
+  "dependencies": {
+    "body-parser": "^1.14.2",
+    "express": "^4.13.3",
+    "mongodb": "^2.0.52",
+    "mongoskin": "^2.0.3"
+  }
+}
