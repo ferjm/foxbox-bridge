@@ -15,7 +15,7 @@ module.exports = (function(req, res, next) {
   function getProfile(req, res, token) {
     return new Promise(function(resolve, reject) {
       request.get({
-        uri: config.get('fxaProfile'),
+        uri: config.get('fxaProfile') + '/email',
         headers: {
           'Authorization': 'Bearer ' + token
         }
@@ -23,6 +23,10 @@ module.exports = (function(req, res, next) {
         if (err) {
           return unauthorized(res, err);
         }
+
+        try {
+          data = JSON.parse(data);
+        } catch(e) {}
 
         if (data.error) {
           return unauthorized(res, data.error);
@@ -51,11 +55,15 @@ module.exports = (function(req, res, next) {
           return unauthorized(res, err);
         }
 
+        try {
+          data = JSON.parse(data);
+        } catch(e) {}
+
         if (data.error) {
           return unauthorized(res, data.error);
         }
 
-        if (data.scope.indexOf('profile:email') === -1) {
+        if (data.scope.indexOf('profile') === -1) {
           return unauthorized(res, 'Invalid scope');
         }
 

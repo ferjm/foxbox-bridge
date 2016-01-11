@@ -15,13 +15,13 @@ var conf = convict({
     doc: 'The Firefox Accounts profile server url',
     format: String,
     env: 'FXA_PROFILE',
-    default: 'https://profile.accounts.firefox.com/v1/'
+    default: 'https://stable.dev.lcip.org/profile/v1'
   },
   fxaVerifier: {
     doc: 'The Firefox Accounts verifier url',
     format: String,
     env: 'FXA_VERIFIER',
-    default: 'https://oauth.accounts.firefox.com/v1/verify'
+    default: 'https://oauth-stable.dev.lcip.org/v1/verify'
   },
 });
 
