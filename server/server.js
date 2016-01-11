@@ -3,12 +3,16 @@
 var auth        = require('./auth.js');
 var bodyParser  = require('body-parser');
 var boxes       = require('./routes/boxes.js');
+var connect     = require('./connect.js');
+var config      = require('./config.js').conf;
 var connections = require('./routes/connections.js');
 var express     = require('express');
 var morgan      = require('morgan');
 var users       = require('./routes/users.js');
 
-var app = module.exports.app = exports.app = express();
+var app         = module.exports.app = exports.app = express();
+
+var ws          = require('express-ws')(app);
 
 // Body parser.
 app.use(bodyParser.json());
@@ -49,5 +53,8 @@ app.post('/boxes/:id/connections/', auth, connections.create);
 app.get('/boxes/:id/connections/', auth, connections.get);
 app.get('/boxes/connections/:token/', connections.initiate);
 app.delete('/boxes/connection/:token/', auth, connections.delete);
+
+// Connect endpoint.
+app.ws(config.get('wsConnectEndpoint'), connect);
 
 app.listen(3000);
