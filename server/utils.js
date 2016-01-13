@@ -1,5 +1,13 @@
 'use strict';
 
+function required(object, properties) {
+  properties.forEach(function(property) {
+    if (!object[property]) {
+      throw new Error('Missing parameter ' + property);
+    }
+  });
+}
+
 function sendError(res, code, errno, error, message, info) {
   var errmap = {};
   if (code) {
@@ -24,5 +32,6 @@ function sendError(res, code, errno, error, message, info) {
 }
 
 module.exports = {
-  sendError: sendError
+  required  : required,
+  sendError : sendError
 };

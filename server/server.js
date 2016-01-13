@@ -2,13 +2,14 @@
 
 var auth        = require('./auth.js');
 var bodyParser  = require('body-parser');
-var boxes       = require('./routes/boxes.js');
-var connect     = require('./connect.js');
-var config      = require('./config.js').conf;
-var connections = require('./routes/connections.js');
+var boxes       = require('./routes/boxes');
+var boxconnect  = require('./boxconnect');
+var connect     = require('./connect');
+var config      = require('./config').conf;
+var connections = require('./routes/connections');
 var express     = require('express');
 var morgan      = require('morgan');
-var users       = require('./routes/users.js');
+var users       = require('./routes/users');
 
 var app         = module.exports.app = exports.app = express();
 
@@ -48,13 +49,8 @@ app.get('/boxes/:id/users/', auth, users.get);
 app.put('/boxes/:id/users/:email/', auth, users.update);
 app.delete('/boxes/:id/users/:email/', auth, users.delete);
 
-// Routes - Connections.
-app.post('/boxes/:id/connections/', auth, connections.create);
-app.get('/boxes/:id/connections/', auth, connections.get);
-app.get('/boxes/connections/:token/', connections.initiate);
-app.delete('/boxes/connection/:token/', auth, connections.delete);
-
-// Connect endpoint.
+// Connection endpoints (WebSockets).
 app.ws(config.get('wsConnectEndpoint'), connect);
+app.ws(config.get('wsBoxesConnectEndpoint'), boxconnect.onConnectionRequest);
 
 app.listen(3000);

@@ -23,6 +23,11 @@ var conf = convict({
     env: 'FXA_VERIFIER',
     default: 'https://oauth-stable.dev.lcip.org/v1/verify'
   },
+  wsBoxesConnectEndpoint: {
+    doc: 'The endpoint to respond to a external connection request to a box',
+    format: String,
+    default: '/boxes/connect'
+  },
   wsConnectEndpoint: {
     doc: 'The endpoint to initiate a external connection with a FoxBox',
     format: String,
