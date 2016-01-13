@@ -11,8 +11,8 @@ module.exports = (function() {
 
   /** Helpers **/
 
-  function initiateBoxConnection(boxId) {
-    var connection = new BoxConnection(boxId);
+  function initiateBoxConnection(box) {
+    var connection = new BoxConnection(box);
     return connection.initiate();
   };
 
@@ -66,8 +66,7 @@ module.exports = (function() {
         }
         self.response({
           type: 'hello',
-          boxLabel: label,
-          webrtcAnswer: connection.answer,
+          webrtcAnswer: connection.webrtcAnswer,
           iceCandidate: connection.iceCandidate
         });
       }, function(error) {

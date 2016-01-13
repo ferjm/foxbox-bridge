@@ -1,5 +1,7 @@
 'use strict';
 
+var errors = require('./errno.json');
+
 module.exports = (function() {
 
   // From ws module. WebSockets.OPEN

@@ -52,4 +52,10 @@ app.delete('/boxes/:id/users/:email/', auth, users.delete);
 app.ws(config.get('wsConnectEndpoint'), connect);
 app.ws(config.get('wsBoxesConnectEndpoint'), boxconnect.onConnectionRequest);
 
+// XXX test push notifications
+app.put('/', function(req, res) {
+  console.log('PUSH notification received', req.body);
+  res.sendStatus(200);
+});
+
 app.listen(3000);

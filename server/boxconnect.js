@@ -1,9 +1,11 @@
 'use strict';
 
 var Boxes           = require('./api/boxes');
+var errors          = require('./errno.json');
 var fxa             = require('./fxa');
-var MessageHandler  = require('./messagehandler');
+var MessageHandler  = require('./messagehandler').MessageHandler;
 var Promise         = require('promise');
+var request         = require('request');
 var utils           = require('./utils');
 
 module.exports = (function() {
@@ -20,25 +22,25 @@ module.exports = (function() {
       throw new Error('Missing box');
     }
     this.box = box;
-    this.version = Date.now();
+    this.version = Date.now() + '';
     this.deferred = {};
     this.deferred.promise = new Promise((function(resolve, reject) {
       this.deferred.resolve = resolve;
       this.deferred.reject = reject;
     }).bind(this));
-    connections.set(this.version, this);
   }
 
   BoxConnection.prototype = {
     initiate: function() {
+      connections.set(this.version, this);
       request.put({
         url: this.box.pushEndpoint,
         form: { version: this.version }
-      }, function(err) {
+      }, (function(err, data) {
         if (err) {
           this.deferred.reject('Push notification error: ' + err);
         }
-      });
+      }).bind(this));
       return this.deferred.promise;
     },
 
@@ -50,15 +52,12 @@ module.exports = (function() {
       this.deferred.reject(reason);
     },
 
-    complete: function(iceCandidate, webrtcOffer) {
+    complete: function(result) {
       if (!connections.has(this.version)) {
         return;
       }
       connections.delete(this.version);
-      this.deferred.resolve({
-        iceCandidate: iceCandidate,
-        webrtcAnswer: webrtcAnswer
-      });
+      this.deferred.resolve(result);
     }
   };
 
@@ -86,12 +85,16 @@ module.exports = (function() {
       var self = this;
       var connection;
 
-      fxa.verify(msg.authorization).then(function(user) {
+      fxa.verify(msg.authorization).then(function() {
+        return fxa.getProfile(msg.authorization);
+      }, function() {
+        self.error(errors.INVALID_AUTH_TOKEN);
+      }).then(function(user) {
         if (!connections.has(msg.version)) {
           return self.error(errors.EXPIRED_BOX_CONNECTION);
         }
         connection = connections.get(msg.version);
-        if (connection.box.owner != user) {
+        if (connection.box.owner != user.email) {
           connection.cancel('Invalid box authentication');
           return self.error(errors.INVALID_AUTH_TOKEN);
         }

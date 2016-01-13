@@ -13,7 +13,16 @@ exports.create = function() {};
  *  label <optional>
  * }
  */
-exports.get = function(filter) {};
+exports.get = function(filter) {
+  // XXX test
+  return Promise.resolve({
+    id: Date.now(),
+    user: 'fmoreno@mozilla.com',
+    owner: 'fmoreno@mozilla.com',
+    label: 'home',
+    pushEndpoint: 'http://localhost:3000/'
+  });
+};
 
 exports.update = function() {};
 
