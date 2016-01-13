@@ -1,15 +1,13 @@
 'use strict';
 
-var BoxConnection = require('./boxconnect').BoxConnection;
-var Boxes         = require('./api/boxes');
-var errors        = require('./errno.json');
-var fxa           = require('./fxa');
-var utils         = require('./utils');
+var BoxConnection   = require('./boxconnect').BoxConnection;
+var Boxes           = require('./api/boxes');
+var errors          = require('./errno.json');
+var fxa             = require('./fxa');
+var MessageHandler  = require('./messagehandler').MessageHandler;
+var utils           = require('./utils');
 
 module.exports = (function() {
-
-  // From ws module. WebSockets.OPEN
-  var OPEN = 1;
 
   /** Helpers **/
 
@@ -20,60 +18,20 @@ module.exports = (function() {
 
   /** MessageHandler **/
 
-  function MessageHandler(ws) {
-    this.ws = ws;
+  function ClientMessageHandler(ws) {
+    MessageHandler.call(this, ws);
   };
 
-  MessageHandler.prototype = {
-    dispatch: function(msg) {
-      try {
-        msg = JSON.parse(msg);
-      } catch(e) {
-        this.error(errors.BAD_REQUEST, 'Bad request');
-        return;
-      }
-
-      if (!msg.type || !this['on' + msg.type]) {
-        this.error(errors.INVALID_MESSAGE_TYPE, 'Invalid message type');
-        return;
-      }
-
-      this['on' + msg.type](msg);
-    },
-
-    error: function(errno, error, keepOpen) {
-      if (this.ws.readyState != WebSocket.OPEN) {
-        return;
-      }
-
-      this.ws.send(JSON.stringify({
-        type: 'error',
-        errno: errno,
-        error: error
-      }));
-      if (!keepOpen) {
-        this.ws.close();
-      }
-    },
-
-    response: function(msg, close) {
-      if (this.ws.readyState != OPEN) {
-        return;
-      }
-
-      try {
-        this.ws.send(JSON.stringify(msg));
-      } catch(e) {
-        console.error('Could not send response', e);
-      }
-      if (close) {
-        this.ws.close();
-      }
-    },
+  ClientMessageHandler.prototype = {
+    __proto__: MessageHandler.prototype,
 
     onhello: function(msg) {
       try{
-        utils.required(msg, ['authorization', 'webrtcOffer', 'iceCandidate']);
+        utils.required(msg, [
+          'authorization',
+          'iceCandidate',
+          'webrtcOffer'
+        ]);
       } catch(e) {
         return this.error(errors.MISSING_PARAMETER, e.message);
       }
@@ -92,6 +50,7 @@ module.exports = (function() {
       }).then(function(box) {
         // If there are multiple boxes associated to this user
         if (Array.isArray(box)) {
+          // XXX remove private box info before send
           this.response({
             type: 'select',
             boxes: box
@@ -111,9 +70,9 @@ module.exports = (function() {
           webrtcAnswer: connection.answer,
           iceCandidate: connection.iceCandidate
         });
-      }, then(function(error) {
+      }, function(error) {
         self.error(errors.BOX_CONNECTION_ERROR, error);
-      }));
+      });
     },
 
   };
@@ -121,8 +80,7 @@ module.exports = (function() {
   /** API **/
 
   return function(ws, req) {
-    // XXX For now sessions are kept in memory.
-    var handler = new MessageHandler(ws);
+    var handler = new ClientMessageHandler(ws);
 
     ws.on('message', handler.dispatch.bind(handler));
 

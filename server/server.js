@@ -6,7 +6,6 @@ var boxes       = require('./routes/boxes');
 var boxconnect  = require('./boxconnect');
 var connect     = require('./connect');
 var config      = require('./config').conf;
-var connections = require('./routes/connections');
 var express     = require('express');
 var morgan      = require('morgan');
 var users       = require('./routes/users');

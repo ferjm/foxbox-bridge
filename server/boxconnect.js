@@ -1,9 +1,10 @@
 'use strict';
 
-var Boxes   = require('./api/boxes');
-var fxa     = require('./fxa');
-var Promise = require('promise');
-var utils   = require('./utils');
+var Boxes           = require('./api/boxes');
+var fxa             = require('./fxa');
+var MessageHandler  = require('./messagehandler');
+var Promise         = require('promise');
+var utils           = require('./utils');
 
 module.exports = (function() {
 
@@ -63,56 +64,12 @@ module.exports = (function() {
 
   /** Message handler **/
 
-  function MessageHandler(ws) {
-    this.ws = ws;
+  function BoxMessageHandler(ws) {
+    MessageHandler.call(this, ws);
   };
 
-  MessageHandler.prototype = {
-    dispatch: function(msg) {
-      try {
-        msg = JSON.parse(msg);
-      } catch(e) {
-        this.error(errors.BAD_REQUEST, 'Bad request');
-        return;
-      }
-
-      if (!msg.type || !this['on' + msg.type]) {
-        this.error(errors.INVALID_MESSAGE_TYPE, 'Invalid message type');
-        return;
-      }
-
-      this['on' + msg.type](msg);
-    },
-
-    error: function(errno, error, keepOpen) {
-      if (this.ws.readyState != WebSocket.OPEN) {
-        return;
-      }
-
-      this.ws.send(JSON.stringify({
-        type: 'error',
-        errno: errno,
-        error: error
-      }));
-      if (!keepOpen) {
-        this.ws.close();
-      }
-    },
-
-    response: function(msg, close) {
-      if (this.ws.readyState != OPEN) {
-        return;
-      }
-
-      try {
-        this.ws.send(JSON.stringify(msg));
-      } catch(e) {
-        console.error('Could not send response', e);
-      }
-      if (close) {
-        this.ws.close();
-      }
-    },
+  BoxMessageHandler.prototype = {
+    __proto__: MessageHandler.prototype,
 
     onhello: function(msg) {
       try{
@@ -149,7 +106,7 @@ module.exports = (function() {
   }
 
   function onConnectionRequest(ws, req) {
-    var handler = new MessageHandler(ws);
+    var handler = new BoxMessageHandler(ws);
 
     ws.on('message', handler.dispatch.bind(handler));
 
