@@ -1,10 +1,8 @@
 'use strict';
 
-var Boxes           = require('./api/boxes');
 var errors          = require('./errors').errno;
 var fxa             = require('./fxa');
 var MessageHandler  = require('./messagehandler').MessageHandler;
-var Promise         = require('promise');
 var request         = require('request');
 var utils           = require('./utils');
 
@@ -65,7 +63,7 @@ module.exports = (function() {
 
   function BoxMessageHandler(ws) {
     MessageHandler.call(this, ws);
-  };
+  }
 
   BoxMessageHandler.prototype = {
     __proto__: MessageHandler.prototype,
@@ -94,7 +92,7 @@ module.exports = (function() {
           return self.error(errors.EXPIRED_BOX_CONNECTION);
         }
         connection = connections.get(msg.version);
-        if (connection.box.owner != user.email) {
+        if (connection.box.owner !== user.email) {
           connection.cancel('Invalid box authentication');
           return self.error(errors.INVALID_AUTH_TOKEN);
         }

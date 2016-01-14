@@ -1,7 +1,6 @@
 'use strict';
 
 var api     = require('../api/boxes');
-var errors  = require('../errors').errno;
 var utils   = require('../utils');
 
 exports.create = function(req, res) {

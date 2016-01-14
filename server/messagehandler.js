@@ -9,7 +9,7 @@ module.exports = (function() {
 
   function MessageHandler(ws) {
     this.ws = ws;
-  };
+  }
 
   MessageHandler.prototype = {
     dispatch: function(msg) {
@@ -29,7 +29,7 @@ module.exports = (function() {
     },
 
     error: function(errno, error, keepOpen) {
-      if (this.ws.readyState != OPEN) {
+      if (this.ws.readyState !== OPEN) {
         return;
       }
 
@@ -44,7 +44,7 @@ module.exports = (function() {
     },
 
     response: function(msg, close) {
-      if (this.ws.readyState != OPEN) {
+      if (this.ws.readyState !== OPEN) {
         return;
       }
 

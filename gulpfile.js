@@ -1,12 +1,13 @@
 var gulp    = require('gulp');
 var jshint  = require('gulp-jshint');
 var nodemon = require('gulp-nodemon');
+var mocha   = require('gulp-spawn-mocha');
 
-gulp.task('default', function () {
+gulp.task('serve', function () {
   nodemon({
     script: './server/server.js',
     ext: 'js'
-  })
+  });
 });
 
 function lint() {
@@ -20,3 +21,15 @@ gulp.task('lint', function() {
     throw e;
   });
 });
+
+gulp.task('test', ['lint'], function () {
+  return gulp.src(['tests/*.test.js'], {read: false})
+    .pipe(mocha({}));
+});
+
+gulp.task('dev', function(){
+  nodemon({ script: './server/server.js', ext: 'js'})
+    .on('start', ['test']);
+});
+
+gulp.task('default', ['dev']);

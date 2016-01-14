@@ -12,7 +12,7 @@ var users       = require('./routes/users');
 
 var app         = module.exports.app = exports.app = express();
 
-var ws          = require('express-ws')(app);
+require('express-ws')(app);
 
 // Body parser.
 app.use(bodyParser.json());

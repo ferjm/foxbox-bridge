@@ -35,7 +35,7 @@ function addBoxToUser(user, boxId) {
 
 function removeBoxFromUser(user, boxId) {
   users.set(user, users.get(user).filter(function(id) {
-    return id != boxId;
+    return id !== boxId;
   }));
 
   if (!users.get(user).length) {
@@ -215,7 +215,7 @@ exports.delete = function(owner, boxId) {
       return reject(errors.UNKNOWN_BOX);
     }
     var box = boxes.get(boxId);
-    if (box.owner != owner) {
+    if (box.owner !== owner) {
       return reject(errors.INVALID_OWNER);
     }
 

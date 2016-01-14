@@ -1,7 +1,6 @@
 'use strict';
 
 var config      = require('./config').conf;
-var Promise     = require('promise');
 var request     = require('request');
 
 module.exports = (function() {
@@ -43,7 +42,7 @@ module.exports = (function() {
         }
       }, function(err, response, data) {
         if (err) {
-          return reject(rr);
+          return reject(err);
         }
 
         try {

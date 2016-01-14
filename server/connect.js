@@ -14,13 +14,13 @@ module.exports = (function() {
   function initiateBoxConnection(box) {
     var connection = new BoxConnection(box);
     return connection.initiate();
-  };
+  }
 
   /** MessageHandler **/
 
   function ClientMessageHandler(ws) {
     MessageHandler.call(this, ws);
-  };
+  }
 
   ClientMessageHandler.prototype = {
     __proto__: MessageHandler.prototype,

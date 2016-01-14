@@ -16,5 +16,6 @@
   "esnext": true,
   "shadow": false,
   "strict": false,
-  "asi": true
+  "asi": true,
+  "proto": true
 }
