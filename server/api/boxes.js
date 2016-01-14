@@ -30,6 +30,25 @@ function addBoxToUser(user, boxId) {
   }
 }
 
+function removeBoxFromUser(user, boxId) {
+  var boxes = users.get(user);
+  users.set(boxes.filter(function(box) {
+    return box.id != boxId;
+  }));
+}
+
+function getBoxById(boxId) {
+  return new Promise(function(resolve) {
+    resolve(boxes.get(boxId));
+  });
+}
+
+function getBoxByUser(user) {
+  return new Promise(function(resolve) {
+    resolve(users.get(user));
+  });
+}
+
 /**
  * Registers a box with the bridge.
  *
@@ -85,23 +104,54 @@ exports.create = function(box) {
 };
 
 /**
- * filter: {
- *  id <optional>
- *  user <optional>
- *  label <optional>
- * }
+ * Gets a box or list of boxes that match a given search filter.
+ *
+ * @param {Object} filter Search filter.
+ * @param {String} filter.id (optional) Box id.
+ * @param {String} filter.user (optional) Box user email.
+ *                             Can be owner or allowed user.
+ * @param {String} filter.label (optional) Box label.
+ *                             Label only searches won't be done.
  */
 exports.get = function(filter) {
-  // XXX test
-  return Promise.resolve({
-    id: Date.now(),
-    user: 'fmoreno@mozilla.com',
-    owner: 'fmoreno@mozilla.com',
-    label: 'home',
-    pushEndpoint: 'http://localhost:3000/'
-  });
+  if (!filter || (!filter.id && !filter.user)) {
+    return Promise.reject(errors.INVALID_FILTER);
+  }
+
+  if (!filter.id && filter.user && filter.label) {
+    filter.id = getBoxById(filter.user, filter.label);
+  }
+
+  if (filter.id) {
+    return getBoxById(filter.id).then(function(result) {
+      if (result) {
+        return result;
+      }
+      if (filter.user) {
+        return getBoxByUser(filter.user);
+      }
+    });
+  }
+
+  if (filter.user) {
+    return getBoxByUser(filter.user);
+  }
 };
 
 exports.update = function() {};
 
-exports.delete = function() {};
+exports.delete = function(boxId) {
+  return new Promise(function(resolve, reject) {
+    if (!boxes.has(boxId)) {
+      return reject(errors.UNKNOWN_BOX);
+    }
+    var box = boxes.get(boxId);
+    boxes.delete(boxId);
+
+    removeBoxFromUser(box.owner, boxId);
+
+    box.users.forEach(function(user) {
+      removeBoxFromUser(user, boxId);
+    });
+  });
+};
