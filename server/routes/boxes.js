@@ -17,7 +17,13 @@ exports.create = function(req, res) {
 };
 
 exports.get = function(req, res) {
-  res.sendStatus(200);
+  api.get({ user: req.user }).then(function(boxes) {
+    res.sendStatus(200, {
+      boxes: boxes
+    });
+  }).catch(function(error) {
+    utils.sendError(res, error);
+  });
 };
 
 exports.delete = function(req, res) {

@@ -25,7 +25,9 @@ function getBoxId(owner, label) {
 
 function addBoxToUser(user, boxId) {
   if (users.has(user)) {
-    users.set(user, users.get(user).push(boxId));
+    var boxes = users.get(user);
+    boxes.push(boxId);
+    users.set(user, boxes);
   } else {
     users.set(user, [boxId]);
   }
@@ -39,12 +41,12 @@ function removeBoxFromUser(user, boxId) {
 }
 
 function getBoxById(boxId) {
-  Promise.resolve(boxes.get(boxId));
+  return Promise.resolve(boxes.get(boxId));
 }
 
 function getBoxesByUser(user) {
   if (!users.has(user)) {
-    return Promise.resolve();
+    return Promise.resolve([]);
   }
 
   var promises = [];
@@ -55,10 +57,6 @@ function getBoxesByUser(user) {
 }
 
 function validateBox(box) {
-  if (box.id && !validator.isAlphanumeric(box.id)) {
-    throw new Error(errors.INVALID_ID);
-  }
-
   if (!validator.isEmail(box.owner)) {
     throw new Error(errors.INVALID_OWNER);
   }
@@ -109,13 +107,13 @@ exports.create = function(box) {
       return reject(errors.ALREADY_REGISTERED);
     }
 
-    boxes.set(box.id, box);
-
     try {
       validateBox(box);
     } catch(e) {
       return reject(e.message);
     }
+
+    boxes.set(box.id, box);
 
     addBoxToUser(box.owner, box.id);
 
