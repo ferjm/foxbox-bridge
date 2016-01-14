@@ -87,6 +87,8 @@ function validateBox(box) {
  *
  * @param {Object} box The box to be registered.
  * @param {String} box.label The human readable identifier of the box.
+ * @param {String} box.description (optional) Human readable description of the
+ *                                 box.
  * @param {String} box.owner Email of the box owner.
  * @param {String} box.pushEndpoint Box side generated push endpoint used to notify
  *                              about remote connection requests.

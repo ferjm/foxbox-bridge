@@ -8,7 +8,7 @@ exports.create = function(req, res) {
   var box = req.body;
   box.owner = req.user;
   api.create(box).then(function(id) {
-    res.sendStatus(200, {
+    res.status(200).json({
       id: id
     });
   }).catch(function(error) {
@@ -18,7 +18,7 @@ exports.create = function(req, res) {
 
 exports.get = function(req, res) {
   api.get({ user: req.user }).then(function(boxes) {
-    res.sendStatus(200, {
+    res.status(200).json({
       boxes: boxes
     });
   }).catch(function(error) {
