@@ -1,5 +1,7 @@
 'use strict';
 
+var ServerError = require('./errors').ServerError;
+
 function required(object, properties) {
   properties.forEach(function(property) {
     if (!object[property]) {
@@ -8,27 +10,11 @@ function required(object, properties) {
   });
 }
 
-function sendError(res, code, errno, error, message, info) {
-  var errmap = {};
-  if (code) {
-    errmap.code = code;
-  }
-  if (errno) {
-    errmap.errno = errno;
-  }
-  if (error) {
-    errmap.error = error;
-  }
-  if (message) {
-    errmap.message = message;
-  }
-  if (info) {
-    errmap.info = info;
-  }
-
+function sendError(res, errno, message) {
   res.errno = errno;
-  console.log(errmap);
-  res.status(code).json(errmap);
+  var error = new ServerError(errno, message);
+  console.log(error);
+  res.status(error.code).json(error);
 }
 
 module.exports = {

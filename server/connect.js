@@ -2,7 +2,7 @@
 
 var BoxConnection   = require('./boxconnect').BoxConnection;
 var Boxes           = require('./api/boxes');
-var errors          = require('./errno.json');
+var errors          = require('./errors').errno;
 var fxa             = require('./fxa');
 var MessageHandler  = require('./messagehandler').MessageHandler;
 var utils           = require('./utils');

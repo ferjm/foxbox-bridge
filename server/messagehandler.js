@@ -1,6 +1,6 @@
 'use strict';
 
-var errors = require('./errno.json');
+var errors = require('./errors').errno;
 
 module.exports = (function() {
 

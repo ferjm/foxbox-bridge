@@ -1,13 +1,13 @@
 'use strict';
 
-var errors      = require('./errno.json');
+var errors      = require('./errors').errno;
 var fxa         = require('./fxa');
 var sendError   = require('./utils').sendError;
 
 module.exports = (function(req, res, next) {
 
   function unauthorized(res, message) {
-    sendError(res, 401, errors.INVALID_AUTH_TOKEN, message || 'Unauthorized');
+    sendError(res, errors.INVALID_AUTH_TOKEN, message || 'Unauthorized');
   }
 
   return function(req, res, next) {

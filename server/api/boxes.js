@@ -1,6 +1,7 @@
 'use strict';
 
-var errors    = require('../errno.json');
+var btoa      = require('btoa');
+var errors    = require('../errors').errno;
 var utils     = require('../utils');
 var validator = require('validator');
 
@@ -12,11 +13,11 @@ var ID_SEPARATOR = ',';
 
 function getBoxId(owner, label) {
   if (!owner || !label) {
-    throw new Error('Missing parameter');
+    throw new Error(errors.MISSING_PARAMETER);
   }
 
   if (label.indexOf(ID_SEPARATOR) > -1) {
-    throw new Error('Invalid label character: "' + ID_SEPARATOR + '"');
+    throw new Error(errors.INVALID_LABEL);
   }
 
   return btoa(owner + ID_SEPARATOR + label);
@@ -128,7 +129,7 @@ exports.create = function(box) {
       });
     }
 
-    resolve(id);
+    resolve(box.id);
   });
 };
 
