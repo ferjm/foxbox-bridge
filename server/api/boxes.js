@@ -38,15 +38,49 @@ function removeBoxFromUser(user, boxId) {
 }
 
 function getBoxById(boxId) {
-  return new Promise(function(resolve) {
-    resolve(boxes.get(boxId));
-  });
+  Promise.resolve(boxes.get(boxId));
 }
 
-function getBoxByUser(user) {
-  return new Promise(function(resolve) {
-    resolve(users.get(user));
+function getBoxesByUser(user) {
+  if (!users.has(user)) {
+    return Promise.resolve();
+  }
+
+  var promises = [];
+  users.get(user).forEach(function(id) {
+    promises.push(getBoxById(id));
   });
+  return Promise.all(promises);
+}
+
+function validateBox(box) {
+  if (box.id && !validator.isAlphanumeric(box.id)) {
+    throw new Error(errors.INVALID_ID);
+  }
+
+  if (!validator.isEmail(box.owner)) {
+    throw new Error(errors.INVALID_OWNER);
+  }
+
+  if (!validator.isURL(box.pushEndpoint, { protocols: ['https'] })) {
+    throw new Error(errors.INVALID_PUSH_ENDPOINT);
+  }
+
+  if (!validator.isAlphanumeric(box.label)) {
+    throw new Error(errors.INVALID_LABEL);
+  }
+
+  if (box.users) {
+    if (!Array.isArray(box.users)) {
+      box.users = [box.users];
+    }
+
+    box.users.forEach(function(user) {
+      if (!validator.isEmail(user)) {
+        throw new Error(errors.INVALID_USERS);
+      }
+    });
+  }
 }
 
 /**
@@ -59,6 +93,7 @@ function getBoxByUser(user) {
  *                              about remote connection requests.
  * @param {Array of String} box.users (optional) List of users allowed to use
  *                                    the box.
+ * @return {Promise}
  */
 exports.create = function(box) {
   return new Promise(function(resolve, reject) {
@@ -75,16 +110,10 @@ exports.create = function(box) {
 
     boxes.set(box.id, box);
 
-    if (!validator.isEmail(box.owner)) {
-      return reject(errors.INVALID_OWNER);
-    }
-
-    if (!validator.isURL(box.pushEndpoint, { protocols: ['https'] })) {
-      return reject(errors.INVALID_PUSH_ENDPOINT);
-    }
-
-    if (!validator.isAlphanumeric(box.label)) {
-      return reject(errors.INVALID_LABEL);
+    try {
+      validateBox(box);
+    } catch(e) {
+      return reject(e.message);
     }
 
     addBoxToUser(box.owner, box.id);
@@ -112,6 +141,7 @@ exports.create = function(box) {
  *                             Can be owner or allowed user.
  * @param {String} filter.label (optional) Box label.
  *                             Label only searches won't be done.
+ * @return {Promise}
  */
 exports.get = function(filter) {
   if (!filter || (!filter.id && !filter.user)) {
@@ -119,7 +149,7 @@ exports.get = function(filter) {
   }
 
   if (!filter.id && filter.user && filter.label) {
-    filter.id = getBoxById(filter.user, filter.label);
+    filter.id = getBoxId(filter.user, filter.label);
   }
 
   if (filter.id) {
@@ -128,19 +158,52 @@ exports.get = function(filter) {
         return result;
       }
       if (filter.user) {
-        return getBoxByUser(filter.user);
+        return getBoxesByUser(filter.user);
       }
     });
   }
 
   if (filter.user) {
-    return getBoxByUser(filter.user);
+    return getBoxesByUser(filter.user);
   }
 };
 
-exports.update = function() {};
+/**
+ * Updates a box registration.
+ *
+ * @param {Object} box The box to be updated.
+ * @param {String} box.id Box identifier.
+ * @param {String} box.label The human readable identifier of the box.
+ * @param {String} box.owner Email of the box owner.
+ * @param {String} box.pushEndpoint Box side generated push endpoint used to notify
+ *                              about remote connection requests.
+ * @param {Array of String} box.users (optional) List of users allowed to use
+ *                                    the box.
+ * @return Promise
+ */
+exports.update = function(box) {
+  try {
+    validateBox(box);
+  } catch(e) {
+    return Promise.reject(e.message);
+  }
 
+  boxes.delete(box.id);
+  boxes.set(box.id, box);
+  return Promise.resolve();
+};
+
+/**
+ * Deletes a box given its id.
+ *
+ * @param {String} boxId Box identifier.
+ * @return {Promise}
+ */
 exports.delete = function(boxId) {
+  if (!validator.isAlphanumeric(boxId)) {
+    return Promise.reject(errors.INVALID_ID);
+  }
+
   return new Promise(function(resolve, reject) {
     if (!boxes.has(boxId)) {
       return reject(errors.UNKNOWN_BOX);
