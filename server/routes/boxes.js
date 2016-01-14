@@ -27,5 +27,9 @@ exports.get = function(req, res) {
 };
 
 exports.delete = function(req, res) {
-  res.sendStatus(200);
+  api.delete(req.user, req.params.id).then(function() {
+    res.sendStatus(200);
+  }).catch(function(error) {
+    utils.sendError(res, error);
+  });
 };

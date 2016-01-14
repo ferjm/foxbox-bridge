@@ -34,10 +34,13 @@ function addBoxToUser(user, boxId) {
 }
 
 function removeBoxFromUser(user, boxId) {
-  var boxes = users.get(user);
-  users.set(boxes.filter(function(box) {
-    return box.id != boxId;
+  users.set(user, users.get(user).filter(function(id) {
+    return id != boxId;
   }));
+
+  if (!users.get(user).length) {
+    users.delete(user);
+  }
 }
 
 function getBoxById(boxId) {
@@ -197,12 +200,14 @@ exports.update = function(box) {
 /**
  * Deletes a box given its id.
  *
+ * @param {String} owner Box owner. Only the owner should be able to remove the
+ *                                  box.
  * @param {String} boxId Box identifier.
  * @return {Promise}
  */
-exports.delete = function(boxId) {
-  if (!validator.isAlphanumeric(boxId)) {
-    return Promise.reject(errors.INVALID_ID);
+exports.delete = function(owner, boxId) {
+  if (!validator.isEmail(owner)) {
+    return Promise.reject(errors.INVALID_OWNER);
   }
 
   return new Promise(function(resolve, reject) {
@@ -210,6 +215,10 @@ exports.delete = function(boxId) {
       return reject(errors.UNKNOWN_BOX);
     }
     var box = boxes.get(boxId);
+    if (box.owner != owner) {
+      return reject(errors.INVALID_OWNER);
+    }
+
     boxes.delete(boxId);
 
     removeBoxFromUser(box.owner, boxId);
@@ -217,5 +226,7 @@ exports.delete = function(boxId) {
     box.users.forEach(function(user) {
       removeBoxFromUser(user, boxId);
     });
+
+    resolve();
   });
 };

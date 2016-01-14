@@ -40,7 +40,7 @@ app.get('/', function(req, res) {
 // Routes - Boxes.
 app.post('/boxes/', auth, boxes.create);
 app.get('/boxes/', auth, boxes.get);
-app.delete('/boxes/:id', auth, boxes.delete);
+app.delete('/boxes/:id/', auth, boxes.delete);
 
 // Routes - Users.
 app.post('/boxes/:id/users/', auth, users.create);

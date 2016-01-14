@@ -2,6 +2,10 @@
 
 var ServerError = require('./errors').ServerError;
 
+function logMapElements(value, key, map) {
+  console.log('m[' + key + '] = ' + value);
+}
+
 function required(object, properties) {
   properties.forEach(function(property) {
     if (!object[property]) {
@@ -18,6 +22,7 @@ function sendError(res, errno, message) {
 }
 
 module.exports = {
-  required  : required,
-  sendError : sendError
+  logMapElements  : logMapElements,
+  required        : required,
+  sendError       : sendError
 };
