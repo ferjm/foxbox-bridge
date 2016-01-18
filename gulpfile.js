@@ -22,14 +22,15 @@ gulp.task('lint', function() {
   });
 });
 
-gulp.task('test', ['lint'], function () {
+gulp.task('run-tests', ['lint'], function () {
   return gulp.src(['tests/*.test.js'], {read: false})
     .pipe(mocha({}));
 });
 
-gulp.task('dev', function(){
+gulp.task('test', function() {
+  process.env.NODE_ENV = 'test';
   nodemon({ script: './server/server.js', ext: 'js'})
-    .on('start', ['test']);
+    .on('start', ['run-tests']);
 });
 
-gulp.task('default', ['dev']);
+gulp.task('default', ['serve']);

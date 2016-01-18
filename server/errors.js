@@ -76,7 +76,7 @@ module.exports = (function() {
     UNDEFINED: {
       code: 500,
       errno: 999,
-      error: 'Unknown error'
+      error: 'Internal server error'
     }
   };
 

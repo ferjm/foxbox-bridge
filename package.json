@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "gulp test"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,7 @@
     "jshint": "^2.8.0",
     "mocha": "^1.18.2",
     "morgan": "^1.6.1",
+    "sinon": "^1.17.2",
     "superagent": "^1.6.1"
   },
   "dependencies": {

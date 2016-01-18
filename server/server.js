@@ -58,4 +58,11 @@ app.put('/', function(req, res) {
   res.sendStatus(200);
 });
 
+if (process.env.NODE_ENV === 'test') {
+  // Firefox Accounts mock server.
+  var fxaMock     = require('../tests/fxa.mock.server');
+  app.post('/fxa/verify', fxaMock.verify);
+  app.get('/fxa/profile/email', fxaMock.getProfile);
+}
+
 app.listen(3000);

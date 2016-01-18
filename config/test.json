@@ -1,0 +1,4 @@
+{
+  "fxaVerifier": "http://localhost:3000/fxa/verify",
+  "fxaProfile": "http://localhost:3000/fxa/profile"
+}
